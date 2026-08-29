@@ -1,6 +1,6 @@
-# [Project name]
+# CellPoint Pro Marketing Center
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A branded marketing workspace for cellphone stores to plan, create, schedule, and measure social content.
 
 ## Run & Operate
 
@@ -22,23 +22,31 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/cellpoint-pro-marketing-center/src/App.tsx` — Demo Mode routes, local state, and product flows
+- `artifacts/cellpoint-pro-marketing-center/src/index.css` — centralized CellPoint Pro theme tokens and responsive UI styles
+- `artifacts/cellpoint-pro-marketing-center/public/brand/cellpoint-pro-logo.png` — supplied official logo asset
+- `artifacts/api-server` — reserved shared API service for future live integrations
+- `lib/api-spec/openapi.yaml` — shared API contract source of truth when backend features are introduced
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Phase 1 is intentionally Demo Mode with local in-browser state so the full workflow can be explored without implying live social connections or fabricated analytics.
+- Customer/store branding is kept conceptually separate from CellPoint Pro software branding; the supplied logo is used only for the product shell.
+- The frontend is its own deployable Vite artifact, while the existing API service remains separately deployable for future auth, tenant isolation, and provider integrations.
+- Social providers should be added behind official OAuth/API service interfaces rather than scraping or collecting social passwords.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Store owners can browse a dashboard, manage simulated channel connections, create and preview posts, generate approval-first CellPoint AI content, schedule content, browse a calendar, manage media, use industry templates, create promotions, review demo analytics, and configure store settings.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+The uploaded CellPoint Pro logo and its navy/orange identity are the source of truth for the product UI.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Demo content is clearly labeled and must not be presented as live social publishing or real analytics.
+- Keep the official logo legible: it uses navy wordmark elements that need a light surface when placed inside the dark product navigation.
 
 ## Pointers
 

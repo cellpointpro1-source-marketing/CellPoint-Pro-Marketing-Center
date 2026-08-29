@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CellPoint Pro Marketing Center"
+description = "A branded marketing workspace for cellphone stores to plan, create, schedule, and measure social content in Demo Mode while live integrations are prepared."
+version = "1.0.0"
+id = "artifacts/cellpoint-pro-marketing-center"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19976
+
+[services.development]
+run = "pnpm --filter @workspace/cellpoint-pro-marketing-center run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cellpoint-pro-marketing-center", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cellpoint-pro-marketing-center/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19976"
+BASE_PATH = "/"
