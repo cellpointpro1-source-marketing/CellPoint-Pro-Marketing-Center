@@ -1,0 +1,12 @@
+[build]
+  command = "pnpm --filter @workspace/cellpoint-pro-marketing-center run build"
+  publish = "artifacts/cellpoint-pro-marketing-center/dist/public"
+
+[build.environment]
+  BASE_PATH = "/"
+  PORT = "4173"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
