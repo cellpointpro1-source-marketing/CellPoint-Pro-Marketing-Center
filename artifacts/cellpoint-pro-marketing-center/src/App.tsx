@@ -11,6 +11,7 @@ import {
   Sparkles, Store, Trash2, Upload, Users, Video, X, Youtube, Zap,
 } from 'lucide-react';
 import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import { getPosLaunchErrorCopy, resolvePosLaunch, type PosLaunchStoreContext } from '@/services/pos-launch';
 
 const queryClient = new QueryClient();
 
@@ -114,12 +115,13 @@ function PlatformDots({ items }: { items: Platform[] }) {
   return <div style={{ display: 'flex', gap: 4 }}>{items.map((platform) => <span key={platform} className={`channel-icon ${platformClass[platform]}`} style={{ width: 21, height: 21, fontSize: 9 }} title={platform}>{platformShort[platform]}</span>)}</div>;
 }
 
-function Dashboard({ posts }: { posts: Post[] }) {
+function Dashboard({ posts, launchContext }: { posts: Post[]; launchContext?: PosLaunchStoreContext }) {
   const recent = posts.slice(0, 4);
   const publishCount = posts.filter((p) => p.status === 'published').length;
   return <div className="content">
     <PageHeading eyebrow="Tuesday, June 18, 2024" title="Make today’s post count." description="A clear view of what is moving, what is next, and where your store can show up today." action={<Link href="/create-post" className="button button-primary" data-testid="link-create-post"><Plus size={15} /> Create a post</Link>} />
-    <div className="demo-callout"><Info size={16} /><span><strong>Demo mode is on.</strong> Everything here is sample store activity saved in this browser. Social accounts are not connected and analytics are illustrative.</span></div>
+     {launchContext && <div className="launch-context"><div className="launch-context-icon"><Store size={17} /></div><div><strong>{launchContext.storeName} · Demo store</strong><span>Opened from the CellPoint Pro POS browser launch. This temporary demo context is not secure authentication.</span></div><span className="tag">storeId: {launchContext.storeId}</span></div>}
+     <div className="demo-callout"><Info size={16} /><span><strong>Demo mode is on.</strong> Everything here is sample store activity saved in this browser. Social accounts are not connected and analytics are illustrative.</span></div>
     <div className="metric-grid">
       {[['Posts this month', String(publishCount + 8), '+3 from last month'], ['Scheduled next', String(posts.filter((p) => p.status === 'scheduled').length), 'Ready for review'], ['Content ready', '12', 'Across 4 categories'], ['Engagement rate', '6.8%', 'Demo data']].map(([label, value, foot], index) => <div className="card metric-card" key={label} data-testid={`metric-card-${index}`}><div className="metric-label">{label}</div><div className="metric-value">{value}</div><div className={`metric-foot ${index === 3 ? 'neutral' : ''}`}>{foot}</div></div>)}
     </div>
@@ -222,13 +224,26 @@ function SettingsPlaceholder({ icon, title, copy, action, onClick }: { icon: Rea
   return <><div className="section-head"><div><h2>{title}</h2><p>{copy}</p></div><span style={{ color: '#c97918' }}>{icon}</span></div><div className="empty" style={{ padding: '42px 20px' }}><Settings2 /><strong>Ready when you are</strong><p>This preference is represented here so the workspace is easy to grow beyond Demo Mode.</p><button className="button button-ghost" style={{ marginTop: 15 }} onClick={onClick} data-testid={`button-${action.toLowerCase().replaceAll(' ', '-')}`}>{action}</button></div></>;
 }
 
+function LaunchErrorPage({ code }: { code: 'missing-store-id' | 'invalid-store-id' }) {
+  const copy = getPosLaunchErrorCopy(code);
+  return <div className="launch-page"><header className="launch-header"><div className="brand-logo-wrap"><img src="/brand/cellpoint-pro-logo.png" alt="CellPoint Pro" /></div><span className="launch-header-label">POS browser launch</span></header><main className="launch-error-wrap"><section className="card launch-error-card"><div className="launch-error-icon"><CircleHelp size={25} /></div><div className="eyebrow">Launch link needs attention</div><h1>{copy.title}</h1><p>{copy.description}</p><div className="launch-error-note"><Info size={15} /><span>For security, a store ID in a URL is only a temporary development routing value. It does not sign you in.</span></div><Link href="/" className="button button-primary" data-testid="link-return-standalone">Return to standalone workspace <ArrowUpRight size={14} /></Link></section></main></div>;
+}
+
+function LaunchShell({ children }: { children: ReactNode }) {
+  return <div className="launch-page"><header className="launch-header"><div className="brand-logo-wrap"><img src="/brand/cellpoint-pro-logo.png" alt="CellPoint Pro" /></div><div className="launch-header-meta"><span className="launch-header-label">POS browser launch</span><span className="launch-secure-note"><span className="demo-dot" /> Development context</span></div></header>{children}</div>;
+}
+
+function LaunchPage({ posts, context }: { posts: Post[]; context: PosLaunchStoreContext }) {
+  return <LaunchShell><main><Dashboard posts={posts} launchContext={context} /></main></LaunchShell>;
+}
+
 function NotFound() {
   return <div className="content"><div className="card empty"><CircleHelp /><strong>That page is not in this demo</strong><p>Use the workspace navigation to find your way back.</p><Link href="/" className="button button-primary" style={{ marginTop: 16 }}>Back to overview</Link></div></div>;
 }
 
 function Router({ posts, setPosts, media, setMedia, promotions, setPromotions, setToast, onUseTemplate, onUsePromotion, composerStarter }: { posts: Post[]; setPosts: (items: Post[]) => void; media: MediaItem[]; setMedia: (items: MediaItem[]) => void; promotions: Promotion[]; setPromotions: (items: Promotion[]) => void; setToast: (message: string) => void; onUseTemplate: (template: typeof templates[number]) => void; onUsePromotion: (promotion: Promotion) => void; composerStarter: { caption: string; media: MediaItem } | null }) {
   return <Switch>
-    <Route path="/"><Dashboard posts={posts} /></Route>
+     <Route path="/"><Dashboard posts={posts} /></Route>
     <Route path="/social-accounts"><SocialAccounts setToast={setToast} /></Route>
     <Route path="/create-post"><Composer media={media} initialCaption={composerStarter?.caption} initialMedia={composerStarter?.media} onSave={(post) => setPosts([post, ...posts])} setToast={setToast} /></Route>
     <Route path="/calendar"><CalendarPage posts={posts} setPosts={setPosts} setToast={setToast} media={media} /></Route>
@@ -246,7 +261,35 @@ function App() {
   const stableToast = useMemo(() => toast, [toast]);
   const startFromTemplate = (template: typeof templates[number]) => setComposerStarter({ caption: `${template.title}\n\n${template.description}`, media: media[0] });
   const startFromPromotion = (promotion: Promotion) => setComposerStarter({ caption: `${promotion.name}\n\n${promotion.description}\n\n${promotion.cta}`, media: media[1] });
-  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><Shell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}><Router posts={posts} setPosts={setPosts} media={media} setMedia={setMedia} promotions={promotions} setPromotions={setPromotions} setToast={setToast} onUseTemplate={startFromTemplate} onUsePromotion={startFromPromotion} composerStarter={composerStarter} /></Shell></WouterRouter><Toaster />{stableToast && <div style={{ position: 'fixed', right: 20, bottom: 20, zIndex: 200, background: '#203a5e', color: '#fff', borderRadius: 9, padding: '12px 15px', boxShadow: '0 10px 25px rgba(25,40,60,.2)', fontSize: 12, maxWidth: 340, animation: 'rise-in .2s ease' }} role="status" data-testid="status-toast"><Check size={14} style={{ verticalAlign: 'middle', marginRight: 7, color: '#ffbd59' }} />{stableToast}<button onClick={() => setToast('')} style={{ marginLeft: 12, border: 0, background: 'transparent', color: '#b9c5d2' }} aria-label="Dismiss notification" data-testid="button-dismiss-toast"><X size={13} /></button></div>}</TooltipProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><AppContent posts={posts} setPosts={setPosts} media={media} setMedia={setMedia} promotions={promotions} setPromotions={setPromotions} setToast={setToast} onUseTemplate={startFromTemplate} onUsePromotion={startFromPromotion} composerStarter={composerStarter} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /></WouterRouter><Toaster />{stableToast && <div style={{ position: 'fixed', right: 20, bottom: 20, zIndex: 200, background: '#203a5e', color: '#fff', borderRadius: 9, padding: '12px 15px', boxShadow: '0 10px 25px rgba(25,40,60,.2)', fontSize: 12, maxWidth: 340, animation: 'rise-in .2s ease' }} role="status" data-testid="status-toast"><Check size={14} style={{ verticalAlign: 'middle', marginRight: 7, color: '#b9c5d2' }} />{stableToast}<button onClick={() => setToast('')} style={{ marginLeft: 12, border: 0, background: 'transparent', color: '#b9c5d2' }} aria-label="Dismiss notification" data-testid="button-dismiss-toast"><X size={13} /></button></div>}</TooltipProvider></QueryClientProvider>;
+}
+
+type AppContentProps = {
+  posts: Post[];
+  setPosts: (items: Post[]) => void;
+  media: MediaItem[];
+  setMedia: (items: MediaItem[]) => void;
+  promotions: Promotion[];
+  setPromotions: (items: Promotion[]) => void;
+  setToast: (message: string) => void;
+  onUseTemplate: (template: typeof templates[number]) => void;
+  onUsePromotion: (promotion: Promotion) => void;
+  composerStarter: { caption: string; media: MediaItem } | null;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+};
+
+function AppContent({ posts, setPosts, media, setMedia, promotions, setPromotions, setToast, onUseTemplate, onUsePromotion, composerStarter, mobileOpen, setMobileOpen }: AppContentProps) {
+  const [location] = useLocation();
+  if (location === '/launch') {
+    const launch = resolvePosLaunch(window.location.search);
+    if (launch.kind === 'error') {
+      return <LaunchErrorPage code={launch.code} />;
+    }
+    return <LaunchPage posts={posts} context={launch.context} />;
+  }
+
+  return <Shell mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}><Router posts={posts} setPosts={setPosts} media={media} setMedia={setMedia} promotions={promotions} setPromotions={setPromotions} setToast={setToast} onUseTemplate={onUseTemplate} onUsePromotion={onUsePromotion} composerStarter={composerStarter} /></Shell>;
 }
 
 export default App;
