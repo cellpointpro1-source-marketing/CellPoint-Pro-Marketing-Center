@@ -1,0 +1,64 @@
+We have confirmed that the CellPoint Pro POS is a Windows desktop application built with .NET.
+
+We need to prepare the CellPoint Pro Marketing Center for integration with that POS.
+
+IMPORTANT:
+Do not embed the application in the POS yet.
+The first integration will open the Marketing Center in the user's default Windows browser.
+
+Implement the following:
+
+1. Add a dedicated launch route:
+
+/launch
+
+2. For the current development/demo phase, support:
+
+/launch?storeId=demo
+
+3. When storeId=demo is supplied:
+   - Open the existing demo store dashboard.
+   - Identify the current store as the demo store.
+   - Preserve all existing Demo Mode functionality.
+
+4. Create a dedicated POS launch service/module in the application.
+
+5. Do NOT treat storeId from the URL as secure authentication.
+   It is only a temporary development mechanism.
+
+6. Clearly document that production authentication must use a secure short-lived signed launch token or an equivalent SSO/OIDC architecture.
+
+7. Prepare the backend/API architecture for a future launch request containing:
+   - storeId
+   - userId
+   - user name
+   - store name
+   - store phone
+   - store address
+   - store website
+   - store logo
+
+8. Do not put passwords, API keys, social tokens, or permanent authentication credentials in the URL.
+
+9. Add validation for missing or invalid store IDs.
+
+10. If an invalid store is supplied, show a professional CellPoint Pro error page.
+
+11. Keep standalone login working exactly as it currently does.
+
+12. Keep the existing CellPoint Pro branding and logo unchanged.
+
+13. Add developer documentation explaining how the Windows .NET CellPoint Pro POS should launch the application.
+
+14. Prepare an API contract/documentation for the eventual secure POS-to-Marketing-Center launch flow.
+
+15. Do not implement actual SSO yet.
+
+16. Do not add or change any social-media API functionality as part of this task.
+
+After completing the work:
+- Test the /launch route.
+- Verify the demo store loads correctly.
+- Commit the changes.
+- Push them to GitHub.
+- Confirm Netlify will receive the updated deployment.
