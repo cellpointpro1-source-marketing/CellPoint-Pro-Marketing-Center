@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: pos-launch
+    description: POS-to-browser launch preparation
 paths:
   /healthz:
     get:
@@ -24,6 +26,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /pos/launch:
+    post:
+      operationId: createPosLaunchRequest
+      tags: [pos-launch]
+      summary: Validate a future POS launch request
+      description: >
+        Validates the request shape reserved for a secure POS-to-browser
+        exchange. The exchange is intentionally not implemented yet and never
+        treats a URL storeId as authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PosLaunchRequest"
+      responses:
+        "400":
+          description: Invalid launch request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "501":
+          description: Secure launch exchange is not implemented yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +63,37 @@ components:
           type: string
       required:
         - status
+    PosLaunchRequest:
+      type: object
+      description: Store and user context reserved for the eventual secure launch exchange.
+      required:
+        - storeId
+      properties:
+        storeId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        userId:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        storeName:
+          type: ["string", "null"]
+        storePhone:
+          type: ["string", "null"]
+        storeAddress:
+          type: ["string", "null"]
+        storeWebsite:
+          type: ["string", "null"]
+        storeLogo:
+          type: ["string", "null"]
+      additionalProperties: false
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
 
