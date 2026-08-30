@@ -1,0 +1,1 @@
+- [GitHub connector push](github-connector-push.md) — prefer the authorized proxy contents flow when direct git-data pushes hit sandbox replay errors.
